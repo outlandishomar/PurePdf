@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Icon layer (white rounded square with red lines) -->
+    <item
+        android:width="72dp"
+        android:height="72dp"
+        android:drawable="@drawable/ic_splash_mark"
+        android:gravity="center"
+        android:bottom="48dp" />
+        
+    <!-- Wordmark layer ("PurePdf" text) -->
+    <item
+        android:width="120dp"
+        android:height="28dp"
+        android:drawable="@drawable/ic_splash_wordmark"
+        android:gravity="center"
+        android:top="72dp" />
+        
+</layer-list>

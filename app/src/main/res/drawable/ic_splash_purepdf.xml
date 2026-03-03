@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Letter P -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,36 L10,72 L16,72 L16,58 L24,58 C30.63,58 36,52.63 36,46 C36,39.37 30.63,36 24,36 L10,36 Z M16,42 L23,42 C27,42 30,43.5 30,46.5 C30,49.5 27,52 23,52 L16,52 L16,42 Z" />
+
+    <!-- Letter u -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,48 L38,66 C38,70 41,72 45,72 L48,72 C52,72 54,70 54,66 L54,48 L48,48 L48,65 C48,66.5 47,67 46,67 C45,67 44,66.5 44,65 L44,48 Z" />
+
+    <!-- Letter r -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M57,48 L57,72 L63,72 L63,56 C63,53 65,51 67,51 L69,51 L69,48 L66,48 C63.5,48 62,49.5 61,51 L61,48 Z" />
+
+    <!-- Letter e -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,48 C72,48 70,48 70,52 L70,66 C70,70 73,72 77,72 L82,72 L82,67 L78,67 C76,67 76,66 76,65 L82,65 L82,58 L76,58 L76,54 C76,53 76.5,53 77,53 L82,53 L82,48 Z" />
+
+    <!-- Letter P (second) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,76 L10,108 L16,108 L16,96 L24,96 C30.63,96 36,90.63 36,84 C36,77.37 30.63,76 24,76 Z M16,82 L23,82 C27,82 30,83.5 30,86.5 C30,89.5 27,92 23,92 L16,92 Z" />
+
+    <!-- Letter d -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M84,36 L84,72 L90,72 L90,48 L90,36 Z M84,52 C84,49.5 86,48 88,48 L90,48 L90,68 L88,68 C86,68 84,66.5 84,64 Z" />
+
+    <!-- Letter f -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M94,36 L94,72 L100,72 L100,56 L104,56 L104,51 L100,51 L100,42 C100,40 101,39 102,39 L104,39 L104,36 L101,36 C97,36 94,38 94,42 Z" />
+
+</vector>

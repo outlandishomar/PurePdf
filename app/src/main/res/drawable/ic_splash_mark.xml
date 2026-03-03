@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- Rounded white square background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,10 h40 c11.05,0 20,8.95 20,20 v40 c0,11.05 -8.95,20 -20,20 h-40 c-11.05,0 -20,-8.95 -20,-20 v-40 c0,-11.05 8.95,-20 20,-20 z" />
+    
+    <!-- Three red horizontal lines (top two are full length, bottom is shorter) -->
+    <path
+        android:strokeColor="#CC3333"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:pathData="M 28 34 L 72 34 M 28 50 L 72 50 M 28 66 L 54 66" />
+</vector>

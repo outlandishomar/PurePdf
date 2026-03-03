@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.PurePdf" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.PurePdf" parent="Base.Theme.PurePdf" />
+
+    <!-- Splash Screen: red background + app launcher icon -->
+    <style name="Theme.PurePDF.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_red</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/pdf_icon</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.PurePdf</item>
+    </style>
+</resources>

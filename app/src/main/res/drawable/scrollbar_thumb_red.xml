@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Scrollbar thumb: solid red with rounded caps.
+    The layer-list width attribute forces a thick rendered width;
+    this is more reliable than relying solely on scrollbarSize.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="12dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/brand_red" />
+            <corners android:radius="6dp" />
+        </shape>
+    </item>
+</layer-list>
