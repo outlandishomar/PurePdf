@@ -2,17 +2,18 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.saverio.pdfviewer"
+        applicationId = "com.outlandishomar.purepdf"
         minSdk = 21
-        targetSdk = 34
-        versionCode = 65
-        versionName = "1.16"
+        targetSdk = 35
+        versionCode = 66
+        versionName = "3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,9 +27,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.7"
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -36,6 +34,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    namespace = "com.outlandishomar.purepdf"
 }
 
 dependencies {
