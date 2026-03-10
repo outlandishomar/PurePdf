@@ -15,10 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Intent
+import androidx.activity.compose.BackHandler
 
 private val PurePdfRed = Color(0xFFCC3333)
 
@@ -31,6 +35,9 @@ fun SettingsScreen(
 ) {
     val isDark = isSystemInDarkTheme()
     var showThemeDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    BackHandler(onBack = onBackClick)
 
     val themeLabel = when (currentTheme) {
         "light" -> "Light"
@@ -89,6 +96,14 @@ fun SettingsScreen(
         )
     }
 
+    // About App screen navigation
+    var showAboutScreen by remember { mutableStateOf(false) }
+
+    if (showAboutScreen) {
+        AboutAppScreen(onBackClick = { showAboutScreen = false })
+        return
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
@@ -115,20 +130,6 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .padding(vertical = 8.dp)
         ) {
-            // Languages
-            SettingsItemDrawable(
-                iconRes = R.drawable.language_icon,
-                title = "Languages",
-                subtitle = "Choose your preferred language",
-                isDark = isDark,
-                onClick = { /* placeholder - not functional yet */ }
-            )
-
-            HorizontalDivider(
-                color = if (isDark) Color(0xFF2A2A2A) else Color(0xFFE0E0E0),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
             // Theme
             SettingsItemVector(
                 icon = Icons.Default.DarkMode,
@@ -149,7 +150,15 @@ fun SettingsScreen(
                 title = "Share App",
                 subtitle = "Share with friends and family",
                 isDark = isDark,
-                onClick = { /* placeholder - not functional yet */ }
+                onClick = {
+                    val shareIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, "Check out PurePdf!")
+                        putExtra(Intent.EXTRA_TEXT, "Here is a great PDF app: https://github.com/outlandishomar/PurePdf/releases")
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share PurePdf via"))
+                }
             )
 
             HorizontalDivider(
@@ -157,13 +166,13 @@ fun SettingsScreen(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            // About The App
+            // About App
             SettingsItemDrawable(
                 iconRes = R.drawable.information_icon,
-                title = "About The App",
+                title = "About App",
                 subtitle = "App info and credits",
                 isDark = isDark,
-                onClick = { /* placeholder - not functional yet */ }
+                onClick = { showAboutScreen = true }
             )
         }
     }
@@ -285,5 +294,113 @@ private fun ThemeOption(
             fontSize = 16.sp,
             color = if (isDark) Color.White else Color.Black
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutAppScreen(onBackClick: () -> Unit) {
+    BackHandler(onBack = onBackClick)
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surface,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("About App", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            val uriHandler = LocalUriHandler.current
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Spacer(modifier = Modifier.height(48.dp)) // push down from top app bar
+                Icon(
+                    painter = painterResource(id = R.drawable.danewicon),
+                    contentDescription = "App Logo",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(130.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "PurePdf",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isSystemInDarkTheme()) Color.White else Color.Black
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                Text(
+                    text = "PurePdf is a lightweight, all-in-one PDF manager designed with your security in mind.\n\n" +
+                           "• Privacy Focused: No unnecessary permissions required. Your files and data stay strictly on your device.\n" +
+                           "• Modern UI & Easy to Use: A clean, intuitive design built to give you the smoothest reading and navigation experience.\n" +
+                           "• Lots of Tools: Merge, split, extract text, and fully manage your documents with powerful built-in tools, completely for free.",
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp,
+                    color = if (isSystemInDarkTheme()) Color.LightGray else Color.DarkGray,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.padding(horizontal = 32.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(48.dp))
+                
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clickable { uriHandler.openUri("https://github.com/outlandishomar/PurePdf") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.github_142),
+                        contentDescription = "GitHub Repository",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+                
+                // Flexible spacer to push the elements to the bottom
+                Spacer(modifier = Modifier.weight(1f))
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp, start = 24.dp, end = 24.dp)
+                ) {
+                    Text(
+                        text = "v3.0",
+                        fontSize = 14.sp,
+                        color = Color.Gray.copy(alpha = 0.5f),
+                        modifier = Modifier.align(Alignment.BottomStart)
+                    )
+                    
+                    Text(
+                        text = "Privacy Policy",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .clickable { uriHandler.openUri("https://outlandishomar.github.io/PurePdf/PRIVACY.html") }
+                    )
+                }
+            }
+        }
     }
 }
