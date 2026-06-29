@@ -1,5 +1,8 @@
 package com.outlandishomar.purepdf
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -15,6 +18,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.BrandingWatermark
 import androidx.compose.material.icons.filled.CallMerge
@@ -47,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.view.HapticFeedbackConstants
@@ -62,6 +67,8 @@ val sfProFontFamily = FontFamily(
 )
 // ── Brand color ──
 private val PurePdfRed = Color(0xFFCC3333)
+
+data class ListPdfItem(val uri: String, val name: String, val timestamp: Long)
 
 // ── Root ──
 
@@ -80,7 +87,12 @@ fun HomeScreen(
     onWatermarkClick: () -> Unit,
     onSignatureClick: () -> Unit,
     onThemeChanged: (String) -> Unit,
-    currentTheme: String
+    currentTheme: String,
+    onListClick: (String) -> Unit,
+    onPickFiles: () -> Unit,
+    pendingFiles: List<Uri>,
+    onClearPendingFiles: () -> Unit,
+    onFileClick: (String) -> Unit
 ) {
     var query by remember { mutableStateOf("") }
     var selectedPdfForInfo by remember { mutableStateOf<RecentPdf?>(null) }
@@ -132,10 +144,10 @@ fun HomeScreen(
                 }
             }
         ) { innerPadding ->
-            val pagerState = rememberPagerState(pageCount = { 2 })
+            val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
             val coroutineScope = rememberCoroutineScope()
-            val tabTitles = listOf("Recent", "Tools")
-            val tabIcons = listOf(Icons.Default.Description, Icons.Default.Build)
+            val tabTitles = listOf("Lists", "Recent", "Tools")
+            val tabIcons = listOf(R.drawable.listsonered, Icons.Default.Description, Icons.Default.Build)
 
             Column(
                 modifier = Modifier
@@ -175,13 +187,24 @@ fun HomeScreen(
                                 )
                             },
                             icon = {
-                                Icon(
-                                    imageVector = tabIcons[index],
-                                    contentDescription = title,
-                                    tint = if (pagerState.currentPage == index) PurePdfRed
-                                           else if (isDark) Color.LightGray else Color.Gray,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                val iconTint = if (pagerState.currentPage == index) PurePdfRed
+                                               else if (isDark) Color.LightGray else Color.Gray
+                                val iconItem = tabIcons[index]
+                                if (iconItem is androidx.compose.ui.graphics.vector.ImageVector) {
+                                    Icon(
+                                        imageVector = iconItem,
+                                        contentDescription = title,
+                                        tint = iconTint,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                } else if (iconItem is Int) {
+                                    Icon(
+                                        painter = painterResource(id = iconItem),
+                                        contentDescription = title,
+                                        tint = iconTint,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
                             }
                         )
                     }
@@ -193,7 +216,14 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxSize()
                 ) { page ->
                     when (page) {
-                        0 -> RecentTabContent(
+                        0 -> ListsTabContent(
+                            isDark = isDark,
+                            onListClick = onListClick,
+                            onPickFiles = onPickFiles,
+                            pendingFiles = pendingFiles,
+                            onClearPendingFiles = onClearPendingFiles
+                        )
+                        1 -> RecentTabContent(
                             items = filteredList,
                             query = query,
                             onQueryChange = { query = it },
@@ -206,7 +236,7 @@ fun HomeScreen(
                             onToggleFavorite = onToggleFavorite,
                             isDark = isDark
                         )
-                        1 -> ToolsPage(
+                        2 -> ToolsPage(
                             onPhotoToPdfClick = onPhotoToPdfClick,
                             onMergePdfClick = onMergePdfClick,
                             onSplitPdfClick = onSplitPdfClick,
@@ -1015,6 +1045,563 @@ fun MergePdfNameDialog(
                 }
             ) {
                 Text("Merge", color = PurePdfRed, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = if (isDark) Color.LightGray else Color.Gray)
+            }
+        }
+    )
+}
+
+// ── Lists Manager (SharedPreferences persistence) ──
+
+object ListsManager {
+    private const val PREFS_NAME = "purepdf_lists"
+    private const val KEY_LISTS = "user_lists"
+    private const val KEY_LIST_FILES_PREFIX = "list_files_"
+
+    fun getLists(context: Context): List<String> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = prefs.getString(KEY_LISTS, "") ?: ""
+        if (raw.isBlank()) return emptyList()
+        return raw.split(";;;")
+    }
+
+    fun addList(context: Context, name: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = getLists(context).toMutableList()
+        current.add(name)
+        prefs.edit().putString(KEY_LISTS, current.joinToString(";;;")).apply()
+    }
+
+    fun deleteList(context: Context, name: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = getLists(context).toMutableList()
+        current.remove(name)
+        prefs.edit()
+            .putString(KEY_LISTS, current.joinToString(";;;"))
+            .remove(KEY_LIST_FILES_PREFIX + name)
+            .apply()
+    }
+
+    fun renameList(context: Context, oldName: String, newName: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = getLists(context).toMutableList()
+        val index = current.indexOf(oldName)
+        if (index != -1) {
+            current[index] = newName
+            val files = prefs.getString(KEY_LIST_FILES_PREFIX + oldName, "")
+            prefs.edit()
+                .putString(KEY_LISTS, current.joinToString(";;;"))
+                .remove(KEY_LIST_FILES_PREFIX + oldName)
+                .putString(KEY_LIST_FILES_PREFIX + newName, files)
+                .apply()
+        }
+    }
+
+    fun getListFiles(context: Context, listName: String): List<ListPdfItem> {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val raw = prefs.getString(KEY_LIST_FILES_PREFIX + listName, "") ?: ""
+        if (raw.isBlank()) return emptyList()
+        return raw.split(";;;").mapNotNull { part ->
+            val data = part.split("|")
+            if (data.size >= 3) {
+                ListPdfItem(data[0], data[1], data[2].toLongOrNull() ?: 0L)
+            } else null
+        }
+    }
+
+    fun addFileToList(context: Context, listName: String, uri: String, fileName: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = getListFiles(context, listName).toMutableList()
+        if (current.none { it.uri == uri }) {
+            current.add(ListPdfItem(uri, fileName, System.currentTimeMillis()))
+            val serialized = current.joinToString(";;;") { "${it.uri}|${it.name}|${it.timestamp}" }
+            prefs.edit().putString(KEY_LIST_FILES_PREFIX + listName, serialized).apply()
+        }
+    }
+
+    fun removeFileFromList(context: Context, listName: String, uri: String) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val current = getListFiles(context, listName).toMutableList()
+        current.removeAll { it.uri == uri }
+        val serialized = current.joinToString(";;;") { "${it.uri}|${it.name}|${it.timestamp}" }
+        prefs.edit().putString(KEY_LIST_FILES_PREFIX + listName, serialized).apply()
+    }
+}
+
+// ── Lists Tab Content ──
+
+@Composable
+private fun ListsTabContent(
+    isDark: Boolean,
+    onListClick: (String) -> Unit,
+    onPickFiles: () -> Unit,
+    pendingFiles: List<Uri>,
+    onClearPendingFiles: () -> Unit
+) {
+    val context = LocalContext.current
+    var lists by remember { mutableStateOf(ListsManager.getLists(context)) }
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var listActionsTarget by remember { mutableStateOf<String?>(null) }
+    var listToRename by remember { mutableStateOf<String?>(null) }
+    val bgColor = if (isDark) Color(0xFF1E1E1E) else Color.White
+    val textColor = if (isDark) Color.White else Color.Black
+
+    if (showCreateDialog) {
+        CreateListDialog(
+            onDismiss = {
+                showCreateDialog = false
+                onClearPendingFiles()
+            },
+            onConfirm = { name, fileUris ->
+                ListsManager.addList(context, name)
+                fileUris.forEach { uri ->
+                    val fileName = getFileName(context, uri)
+                    ListsManager.addFileToList(context, name, uri.toString(), fileName)
+                }
+                onClearPendingFiles()
+                lists = ListsManager.getLists(context)
+                showCreateDialog = false
+            },
+            onPickFiles = onPickFiles,
+            pendingFiles = pendingFiles
+        )
+    }
+
+    if (listActionsTarget != null) {
+        val target = listActionsTarget!!
+        AlertDialog(
+            onDismissRequest = { listActionsTarget = null },
+            containerColor = bgColor,
+            title = {
+                Text(target, fontWeight = FontWeight.Bold, color = textColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    TextButton(
+                        onClick = {
+                            listToRename = target
+                            listActionsTarget = null
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Rename", color = textColor, fontSize = 16.sp, modifier = Modifier.fillMaxWidth())
+                    }
+                    TextButton(
+                        onClick = {
+                            ListsManager.deleteList(context, target)
+                            lists = ListsManager.getLists(context)
+                            listActionsTarget = null
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Delete", color = PurePdfRed, fontSize = 16.sp, modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { listActionsTarget = null }) {
+                    Text("Cancel", color = if (isDark) Color.LightGray else Color.Gray)
+                }
+            }
+        )
+    }
+
+    if (listToRename != null) {
+        var newName by remember { mutableStateOf(listToRename!!) }
+        AlertDialog(
+            onDismissRequest = { listToRename = null },
+            containerColor = bgColor,
+            title = {
+                Text("Rename List", fontWeight = FontWeight.Bold, color = textColor)
+            },
+            text = {
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("New name") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PurePdfRed,
+                        focusedLabelColor = PurePdfRed,
+                        cursorColor = PurePdfRed,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val name = newName.trim()
+                    if (name.isNotBlank()) {
+                        ListsManager.renameList(context, listToRename!!, name)
+                        lists = ListsManager.getLists(context)
+                    }
+                    listToRename = null
+                }) {
+                    Text("Rename", color = PurePdfRed, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { listToRename = null }) {
+                    Text("Cancel", color = if (isDark) Color.LightGray else Color.Gray)
+                }
+            }
+        )
+    }
+
+    if (lists.isEmpty()) {
+        // Empty state – centered red circle with plus
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            FloatingActionButton(
+                onClick = { showCreateDialog = true },
+                containerColor = PurePdfRed,
+                contentColor = Color.White,
+                shape = CircleShape,
+                modifier = Modifier.size(72.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Create List",
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+        }
+    } else {
+        // Grid of folder cards
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(lists.size) { index ->
+                ListFolderCard(
+                    name = lists[index],
+                    isDark = isDark,
+                    onClick = { onListClick(lists[index]) },
+                    onLongClick = { listActionsTarget = lists[index] }
+                )
+            }
+            // "+" card at the end to create more lists
+            item {
+                AddListCard(onClick = { showCreateDialog = true }, isDark = isDark)
+            }
+        }
+    }
+}
+
+// ── Folder-style Card ──
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ListFolderCard(name: String, isDark: Boolean, onClick: () -> Unit = {}, onLongClick: () -> Unit) {
+    val folderColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFE8E8E8)
+    val borderColor = PurePdfRed
+    val textColor = if (isDark) Color.White else Color.Black
+    val paperColor = if (isDark) Color(0xFFF5F5F5) else Color.White
+    val foldColor = if (isDark) Color(0xFFCCCCCC) else Color(0xFFE0E0E0)
+    val view = LocalView.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.1f)
+            .clip(RoundedCornerShape(16.dp))
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = {
+                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                    onLongClick()
+                }
+            )
+    ) {
+        // Paper Layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .fillMaxHeight(0.85f)
+                .align(Alignment.TopCenter)
+                .padding(top = 12.dp)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                val r = 12.dp.toPx()
+                val fold = 24.dp.toPx()
+
+                val paperPath = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(r, 0f)
+                    lineTo(w - fold, 0f)
+                    lineTo(w, fold)
+                    lineTo(w, h - r)
+                    quadraticBezierTo(w, h, w - r, h)
+                    lineTo(r, h)
+                    quadraticBezierTo(0f, h, 0f, h - r)
+                    lineTo(0f, r)
+                    quadraticBezierTo(0f, 0f, r, 0f)
+                    close()
+                }
+                drawPath(paperPath, paperColor)
+
+                val foldPath = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w - fold, 0f)
+                    lineTo(w - fold, fold - r / 2)
+                    quadraticBezierTo(w - fold, fold, w - fold + r / 2, fold)
+                    lineTo(w, fold)
+                    close()
+                }
+                drawPath(foldPath, foldColor)
+            }
+        }
+
+        // Folder Layer
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 32.dp, start = 1.dp, end = 1.dp, bottom = 1.dp)
+        ) {
+            val w = size.width
+            val h = size.height
+            val r = 16.dp.toPx()
+            val tabW = w * 0.45f
+            val tabH = h * 0.2f
+
+            val folderPath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(0f, r)
+                quadraticBezierTo(0f, 0f, r, 0f)
+                lineTo(tabW - r, 0f)
+                cubicTo(tabW, 0f, tabW, tabH, tabW + r, tabH)
+                lineTo(w - r, tabH)
+                quadraticBezierTo(w, tabH, w, tabH + r)
+                lineTo(w, h - r)
+                quadraticBezierTo(w, h, w - r, h)
+                lineTo(r, h)
+                quadraticBezierTo(0f, h, 0f, h - r)
+                close()
+            }
+            drawPath(path = folderPath, color = folderColor)
+            drawPath(
+                path = folderPath,
+                color = borderColor,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+            )
+        }
+
+        // Folder name
+        Text(
+            text = name,
+            color = textColor,
+            fontFamily = sfProFontFamily,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 18.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 24.dp, start = 16.dp, end = 16.dp)
+        )
+    }
+}
+
+// ── "+" card to add more lists ──
+
+@Composable
+private fun AddListCard(onClick: () -> Unit, isDark: Boolean) {
+    val folderColor = if (isDark) Color(0xFF2C2C2C) else Color(0xFFE8E8E8)
+    val borderColor = PurePdfRed.copy(alpha = 0.5f)
+    val paperColor = if (isDark) Color(0xFFF5F5F5) else Color.White
+    val foldColor = if (isDark) Color(0xFFCCCCCC) else Color(0xFFE0E0E0)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1.1f)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+    ) {
+        // Paper Layer
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .fillMaxHeight(0.85f)
+                .align(Alignment.TopCenter)
+                .padding(top = 12.dp)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                val r = 12.dp.toPx()
+                val fold = 24.dp.toPx()
+
+                val paperPath = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(r, 0f)
+                    lineTo(w - fold, 0f)
+                    lineTo(w, fold)
+                    lineTo(w, h - r)
+                    quadraticBezierTo(w, h, w - r, h)
+                    lineTo(r, h)
+                    quadraticBezierTo(0f, h, 0f, h - r)
+                    lineTo(0f, r)
+                    quadraticBezierTo(0f, 0f, r, 0f)
+                    close()
+                }
+                drawPath(paperPath, paperColor)
+
+                val foldPath = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w - fold, 0f)
+                    lineTo(w - fold, fold - r / 2)
+                    quadraticBezierTo(w - fold, fold, w - fold + r / 2, fold)
+                    lineTo(w, fold)
+                    close()
+                }
+                drawPath(foldPath, foldColor)
+            }
+        }
+
+        // Folder Layer
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 32.dp, start = 1.dp, end = 1.dp, bottom = 1.dp)
+        ) {
+            val w = size.width
+            val h = size.height
+            val r = 16.dp.toPx()
+            val tabW = w * 0.45f
+            val tabH = h * 0.2f
+
+            val folderPath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(0f, r)
+                quadraticBezierTo(0f, 0f, r, 0f)
+                lineTo(tabW - r, 0f)
+                cubicTo(tabW, 0f, tabW, tabH, tabW + r, tabH)
+                lineTo(w - r, tabH)
+                quadraticBezierTo(w, tabH, w, tabH + r)
+                lineTo(w, h - r)
+                quadraticBezierTo(w, h, w - r, h)
+                lineTo(r, h)
+                quadraticBezierTo(0f, h, 0f, h - r)
+                close()
+            }
+            drawPath(path = folderPath, color = folderColor)
+            drawPath(
+                path = folderPath,
+                color = borderColor,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 2.dp.toPx(),
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(15f, 15f))
+                )
+            )
+        }
+
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add List",
+            tint = PurePdfRed,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 24.dp)
+                .size(40.dp)
+        )
+    }
+}
+
+// ── Create List Dialog ──
+
+@Composable
+private fun CreateListDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, List<Uri>) -> Unit,
+    onPickFiles: () -> Unit,
+    pendingFiles: List<Uri>
+) {
+    var listName by remember { mutableStateOf("") }
+    val isDark = isSystemInDarkTheme()
+    val bgColor = if (isDark) Color(0xFF1E1E1E) else Color.White
+    val textColor = if (isDark) Color.White else Color.Black
+    val context = LocalContext.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = bgColor,
+        title = {
+            Text(
+                text = "Create New List",
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = listName,
+                    onValueChange = { listName = it },
+                    label = { Text("List name") },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PurePdfRed,
+                        focusedLabelColor = PurePdfRed,
+                        cursorColor = PurePdfRed,
+                        focusedTextColor = textColor,
+                        unfocusedTextColor = textColor
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = onPickFiles,
+                    border = BorderStroke(1.dp, PurePdfRed),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Choose Files",
+                        tint = PurePdfRed,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (pendingFiles.isEmpty()) "Choose Files"
+                               else "${pendingFiles.size} file${if (pendingFiles.size > 1) "s" else ""} selected",
+                        color = PurePdfRed
+                    )
+                }
+                if (pendingFiles.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    pendingFiles.forEach { uri ->
+                        val fileName = remember(uri) { getFileName(context, uri) }
+                        Text(
+                            text = "\u2022 $fileName",
+                            fontSize = 12.sp,
+                            color = if (isDark) Color.LightGray else Color.Gray,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val name = listName.trim()
+                    if (name.isNotBlank()) onConfirm(name, pendingFiles)
+                }
+            ) {
+                Text("Create", color = PurePdfRed, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.content.Intent
 import androidx.activity.compose.BackHandler
+import com.outlandishomar.purepdf.BuildConfig
 
 private val PurePdfRed = Color(0xFFCC3333)
 
@@ -155,7 +156,7 @@ fun SettingsScreen(
                         action = Intent.ACTION_SEND
                         type = "text/plain"
                         putExtra(Intent.EXTRA_SUBJECT, "Check out PurePdf!")
-                        putExtra(Intent.EXTRA_TEXT, "Here is a great PDF app: https://github.com/outlandishomar/PurePdf/releases")
+                        putExtra(Intent.EXTRA_TEXT, "Check out PurePdf on the Play Store: https://play.google.com/store/apps/details?id=com.outlandishomar.purepdf")
                     }
                     context.startActivity(Intent.createChooser(shareIntent, "Share PurePdf via"))
                 }
@@ -384,7 +385,7 @@ fun AboutAppScreen(onBackClick: () -> Unit) {
                         .padding(bottom = 24.dp, start = 24.dp, end = 24.dp)
                 ) {
                     Text(
-                        text = "v3.0",
+                        text = "v${BuildConfig.VERSION_NAME}",
                         fontSize = 14.sp,
                         color = Color.Gray.copy(alpha = 0.5f),
                         modifier = Modifier.align(Alignment.BottomStart)

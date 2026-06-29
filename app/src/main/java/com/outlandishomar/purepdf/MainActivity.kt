@@ -273,6 +273,21 @@ class MainActivity : AppCompatActivity() {
             }
         }
         
+        // List files picker
+        val pendingListFiles = mutableStateOf<List<Uri>>(emptyList())
+
+        val listFilesPickerLauncher = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+            uris.forEach { uri ->
+                try {
+                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (_: SecurityException) {}
+            }
+            pendingListFiles.value = uris
+        }
+
+        // List page navigation state
+        val openListName = mutableStateOf<String?>(null)
+        
         handleIncomingIntent(intent)
 
         setContent {
@@ -359,7 +374,28 @@ class MainActivity : AppCompatActivity() {
                         prefs.edit().putString("theme", newTheme).apply()
                         themeMode = newTheme
                     },
-                    currentTheme = themeMode
+                    currentTheme = themeMode,
+                    onListClick = { listName ->
+                        openListName.value = listName
+                    },
+                    onPickFiles = {
+                        listFilesPickerLauncher.launch(arrayOf("application/pdf"))
+                    },
+                    pendingFiles = pendingListFiles.value,
+                    onClearPendingFiles = {
+                        pendingListFiles.value = emptyList()
+                    },
+                    onFileClick = { uriString ->
+                        val uri = Uri.parse(uriString)
+                        try {
+                            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                            val name = getFileName(this@MainActivity, uri)
+                            RecentsManager.saveRecent(this@MainActivity, uri, name)
+                            openPDFFile(uri)
+                        } catch (e: SecurityException) {
+                            Toast.makeText(this@MainActivity, "File unavailable", Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 )
 
                 // Show naming dialog when PDFs are picked for merging
@@ -434,15 +470,41 @@ class MainActivity : AppCompatActivity() {
                         }
                     )
                 }
+
+                // List detail page
+                if (openListName.value != null) {
+                    ListPage(
+                        listName = openListName.value!!,
+                        onBack = { openListName.value = null },
+                        onFileClick = { uriString ->
+                            val uri = Uri.parse(uriString)
+                            try {
+                                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                                val name = getFileName(this@MainActivity, uri)
+                                RecentsManager.saveRecent(this@MainActivity, uri, name)
+                                openPDFFile(uri)
+                            } catch (e: SecurityException) {
+                                Toast.makeText(this@MainActivity, "File unavailable", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onPickFiles = {
+                            listFilesPickerLauncher.launch(arrayOf("application/pdf"))
+                        },
+                        pendingFiles = pendingListFiles.value,
+                        onClearPendingFiles = {
+                            pendingListFiles.value = emptyList()
+                        }
+                    )
+                }
             }
             }
         }
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent?.let { handleIncomingIntent(it) }
+        handleIncomingIntent(intent)
     }
 
     private fun handleIncomingIntent(incomingIntent: Intent?) {
@@ -486,7 +548,7 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this@MainActivity, PDFViewer::class.java)
         if (uri != null) {
             intent.data = uri
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         }
         val uriToOpen = Bundle()
         uriToOpen.putString("uri", uri?.toString() ?: "") //Your id
@@ -547,7 +609,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 pdfDocument.close()
 
-                val fileUri = Uri.fromFile(outputFile)
+                val fileUri = FileProvider.getUriForFile(this@MainActivity, "com.outlandishomar.purepdf.fileprovider", outputFile)
                 RecentsManager.saveRecent(this@MainActivity, fileUri, outputFile.name)
 
                 withContext(Dispatchers.Main) {
@@ -604,7 +666,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 outputPdf.close()
 
-                val fileUri = Uri.fromFile(outputFile)
+                val fileUri = FileProvider.getUriForFile(this@MainActivity, "com.outlandishomar.purepdf.fileprovider", outputFile)
                 RecentsManager.saveRecent(this@MainActivity, fileUri, outputFile.name)
 
                 withContext(Dispatchers.Main) {
@@ -662,7 +724,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 outputPdf.close()
 
-                val fileUri = Uri.fromFile(outputFile)
+                val fileUri = FileProvider.getUriForFile(this@MainActivity, "com.outlandishomar.purepdf.fileprovider", outputFile)
                 RecentsManager.saveRecent(this@MainActivity, fileUri, outputFile.name)
 
                 withContext(Dispatchers.Main) {
@@ -711,7 +773,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 outputPdf.close()
 
-                val fileUri = Uri.fromFile(outputFile)
+                val fileUri = FileProvider.getUriForFile(this@MainActivity, "com.outlandishomar.purepdf.fileprovider", outputFile)
                 RecentsManager.saveRecent(this@MainActivity, fileUri, outputFile.name)
 
                 withContext(Dispatchers.Main) {
@@ -821,7 +883,7 @@ class MainActivity : AppCompatActivity() {
 
                 createPdfFromText(text, outputFile)
 
-                val fileUri = Uri.fromFile(outputFile)
+                val fileUri = FileProvider.getUriForFile(this@MainActivity, "com.outlandishomar.purepdf.fileprovider", outputFile)
                 RecentsManager.saveRecent(this@MainActivity, fileUri, outputFile.name)
 
                 withContext(Dispatchers.Main) {
@@ -956,7 +1018,7 @@ class MainActivity : AppCompatActivity() {
                 java.io.FileOutputStream(outputFile).use { document.writeTo(it) }
                 document.close()
 
-                val fileUri = Uri.fromFile(outputFile)
+                val fileUri = FileProvider.getUriForFile(this@MainActivity, "com.outlandishomar.purepdf.fileprovider", outputFile)
                 RecentsManager.saveRecent(this@MainActivity, fileUri, outputFile.name)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Watermark applied!", Toast.LENGTH_SHORT).show()
@@ -1031,7 +1093,7 @@ class MainActivity : AppCompatActivity() {
                 java.io.FileOutputStream(outputFile).use { document.writeTo(it) }
                 document.close()
 
-                val fileUri = Uri.fromFile(outputFile)
+                val fileUri = FileProvider.getUriForFile(this@MainActivity, "com.outlandishomar.purepdf.fileprovider", outputFile)
                 RecentsManager.saveRecent(this@MainActivity, fileUri, outputFile.name)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@MainActivity, "Signature applied!", Toast.LENGTH_SHORT).show()
