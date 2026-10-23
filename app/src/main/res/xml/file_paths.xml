@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="converted_pdfs" path="converted_pdfs/" />
+    <files-path name="merged_pdfs" path="merged_pdfs/" />
+    <files-path name="split_pdfs" path="split_pdfs/" />
+    <files-path name="managed_pdfs" path="managed_pdfs/" />
+    <files-path name="edited_pdfs" path="edited_pdfs/" />
+    <files-path name="watermarked_pdfs" path="watermarked_pdfs/" />
+    <files-path name="signed_pdfs" path="signed_pdfs/" />
+    <cache-path name="cache" path="." />
+</paths>

@@ -1,0 +1,9 @@
+📚📖 View all PDF files in a simple way
+🔒 The app is safe, in fact it <b>doesn't require any permissions</b>!
+📌 It saves automatically saves the last position for each file
+🔖 You can create <b>bookmarks</b> and manage them
+🔐 The app <b>can</b> open PDFs protected by password
+🌙 The <i>Night light</i> <b>to protect your eyes</b> is available
+👐‍‍ The app is open-source and available on <a href="https://github.com/Sav22999/sav-pdf-viewer-pro">GitHub</a>
+
+❌ You can't select or copy text. You can't open links.

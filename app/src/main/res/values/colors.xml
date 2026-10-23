@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="white_smoke">#EEEEEE</color>
+    <color name="dark_white">#CCCCCC</color>
+
+    <color name="transparent">#00000000</color>
+
+    <color name="transparentPassword">#AA000000</color>
+    <color name="backgroundNightTheme">#44FF9800</color>
+
+    <color name="spacingPage">#EEEEEE</color>
+    <color name="spacingPageDark">#111111</color>
+
+    <color name="gray">#666666</color>
+    <color name="dark_gray">#FF333333</color>
+    <color name="dark_dark_gray">#FF111111</color>
+
+    <color name="light_red">#FF7272</color>
+    <color name="red">#FF0000</color>
+    <color name="dark_red">#D32F2F</color>
+    <color name="dark_dark_red">#BA2A2A</color>
+    <color name="dark_dark_dark_red">#701A1A</color>
+    <color name="transparent_red">#11FF0000</color>
+    <color name="transparent_red_2">#99FF0000</color>
+    <color name="transparent_red_3">#33FF0000</color>
+
+    <color name="dark_red_night">#781414</color>
+    <color name="dark_dark_red_night">#5C1010</color>
+    <color name="pure_pdf_red">#CC3333</color>
+</resources>
