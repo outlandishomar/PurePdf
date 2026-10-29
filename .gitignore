@@ -9,3 +9,7 @@
 .cxx
 local.properties
 .gitattributes
+.idea/
+.vscode/
+.kotlin/
+*.log
