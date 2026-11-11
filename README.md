@@ -21,7 +21,7 @@
 
 ---
 
-## 📥 Download
+## Download
 
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.outlandishomar.purepdf">
@@ -29,15 +29,15 @@
   </a>
 </div>
 
-> 💡 Prefer direct APK installation? You can always grab the latest signed APK from the [GitHub Releases](../../releases) page.
+> Prefer direct APK installation? You can always grab the latest signed APK from the [GitHub Releases](../../releases) page.
 
 ---
 
-## ✨ Features Deep-Dive
+## Features Deep-Dive
 
 PurePDF takes standard PDF viewing to the next level with a revamped, modern UI/UX and an integrated toolkit to handle all your document needs in one place.
 
-### 🛠️ Built-in PDF Toolkit
+### Built-in PDF Toolkit
 No need to install separate apps or upload your private documents to online converters. PurePDF includes a dedicated **Tools** tab that processes everything locally on your device:
 * **Image to PDF:** Convert single or multiple images directly into a clean PDF document.
 * **Merge PDF:** Combine multiple PDF files into a single, unified document.
@@ -48,7 +48,7 @@ No need to install separate apps or upload your private documents to online conv
 
 ---
 
-### 📖 Smooth Reading Experience
+### Smooth Reading Experience
 Built on a rock-solid viewing engine, PurePDF offers everything you need for comfortable reading:
 * **Full-Text Search & Selection:** Quickly search for keywords inside documents and copy text with ease.
 * **Bookmarks & History:** Add, remove, and manage bookmarks, while automatically remembering the last read page for every document.
@@ -58,7 +58,7 @@ Built on a rock-solid viewing engine, PurePDF offers everything you need for com
 
 ---
 
-## 🔒 100% Local & Privacy-First
+## 100% Local & Privacy-First
 
 Your documents are your business.
 * **Offline Processing:** All viewing, merging, splitting, and conversions happen directly on your phone.
@@ -66,7 +66,7 @@ Your documents are your business.
 
 ---
 
-## 🤝 Support & Contribute
+## Support & Contribute
 
 PurePDF is completely free and open-source. If you find the app valuable and want to support its maintenance and new features:
 
@@ -79,19 +79,19 @@ PurePDF is completely free and open-source. If you find the app valuable and wan
 <br />
 
 You can also support the project for free:
-* ⭐ **Star this repository** on GitHub to help others discover PurePDF.
-* 🌟 **Leave a 5-star review** on [Google Play](https://play.google.com/store/apps/details?id=com.outlandishomar.purepdf) — it helps tremendously with store visibility.
-* 🐛 **Report bugs or suggest features** by opening an [Issue](../../issues).
-* 💻 **Contribute code** via [Pull Requests](../../pulls).
+* **Star this repository** on GitHub to help others discover PurePDF.
+* **Leave a review** on [Google Play](https://play.google.com/store/apps/details?id=com.outlandishomar.purepdf) — it helps tremendously with store visibility.
+* **Report bugs or suggest features** by opening an [Issue](../../issues).
+* **Contribute code** via [Pull Requests](../../pulls).
 
 ---
 
-## 👏 Credits & Acknowledgments
+## Credits & Acknowledgments
 
 PurePDF is a fork of [Sav PDF Viewer Pro](https://github.com/Sav22999/Sav-PDF-Viewer-Pro) originally developed by **Saverio Morelli**. This project builds upon its core PDF viewer engine by introducing a redesigned UI/UX and a comprehensive suite of built-in PDF manipulation tools.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **GNU General Public License v3.0 (GPLv3)** – see the [LICENSE](LICENSE) file for details.
